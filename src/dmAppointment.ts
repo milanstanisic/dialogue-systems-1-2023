@@ -265,7 +265,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "whotheyare",
-            actions: Object.assign(Grammar, x: { intent: "None", entities: { person: context }}),
+            actions: { assign( Grammar, { intent: "None", entities: { person: kbRequest(context) }}),
+              assign({ person: (context) => getEntity(context, "person"), }),
+            },
           },
         ],
         TIMEOUT: ".prompt",
@@ -287,7 +289,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     whotheyare: {
       entry: send((context) => ({
         type: "SPEAK",
-        value: "${kbRequest(getEntity(context, "person")}",
+        value: "${}",
         })),
       on: { ENDSPEECH: "wannameetthem" },
     },
