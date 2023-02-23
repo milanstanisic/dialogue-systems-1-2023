@@ -336,7 +336,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "info"
+            target: "info",
             cond: (context) => !!getEntity(context, "title"),
             actions: assign({
               title: (context) => getEntity(context, "title"),
@@ -373,7 +373,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "duration"
+            target: "duration",
             cond: (context) => !!getEntity(context, "day"),
             actions: assign({
               day: (context) => getEntity(context, "day"),
@@ -404,14 +404,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "confirmation_whole_day"
+            target: "confirmation_whole_day",
             cond: (context) => !!getEntity(context, "affirm"),
             actions: assign({
               affirm: (context) => getEntity(context, "affirm"),
             }),
           },
           {
-            target: "meeting_time"
+            target: "meeting_time",
             cond: (context) => !!getEntity(context, "reject"),
             actions: assign({
               reject: (context) => getEntity(context, "reject"),
@@ -442,7 +442,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "confirmation_time"
+            target: "confirmation_time",
             cond: (context) => !!getEntity(context, "time"),
             actions: assign({
               time: (context) => getEntity(context, "time"),
@@ -473,14 +473,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "endline"
+            target: "endline",
             cond: (context) => !!getEntity(context, "affirm"),
             actions: assign({
                affirm: (context) => getEntity(context, "affirm"),
             }),
           },
           {
-            target: "welcome"
+            target: "welcome",
             cond: (context) => !!getEntity(context, "reject"),
             actions: assign({
               reject: (context) => getEntity(context, "reject"),
@@ -511,14 +511,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       on: {
         RECOGNISED: [
           {
-            target: "endline"
+            target: "endline",
             cond: (context) => !!getEntity(context, "affirm"),
             actions: assign({
               affirm: (context) => getEntity(context, "affirm"),
             }),
           },
           {
-            target: "welcome"
+            target: "welcome",
             cond: (context) => !!getEntity(context, "reject"),
             actions: assign({
               reject: (context) => getEntity(context, "reject"),
