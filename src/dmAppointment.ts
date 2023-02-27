@@ -192,7 +192,39 @@ const grammar: Grammar = {
   },
   "meeting with a person": {
     intent: "None",
-    entities: { title: "meting with somebody"},
+    entities: { title: "meeting with somebody"},
+  },
+  "Barbra Streisand": {
+    intent: "None",
+    entities: { person: "Barbra Streisand - a singer"},
+  },
+  "Whitney Houston": {
+    intent: "None",
+    entities: { person: "Whitney Houston - a singer"},
+  },
+  "Celine Dion": {
+    intent: "None" ,
+    entities: { person: "Celine Dion - a singer"},
+  },
+  "Jack Black": {
+    intent: "None",
+    entities: { person: "Jack Black - an actor"},
+  },
+  "Scarlett Johansson": {
+    intent: "None",
+    entities: { person: "Scarlett Johansson - an actress"},
+  },
+  "John Travolta": {
+    intent: "None",
+    entities: { person: "John Travolta - an actor"},
+  },
+  "Milan": {
+    intent: "None",
+    entities: { person: "Milan - a student"}, 
+  },
+  "Vlad": {
+    intent: "None",
+    entities: { person: "Vlad - a lecturer"},
   },
 };
 
@@ -265,9 +297,13 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "whotheyare",
-            actions: { assign( Grammar, { intent: "None", entities: { person: kbRequest(context) }}),
-              assign({ person: (context) => getEntity(context, "person"), }),
+            cond: (context) => !!getEntity(context, "person"),
+            actions: assign({
+              person: (context) => getEntity(context, "person"),
+            }),
             },
+          {
+            target: ".nomatch",
           },
         ],
         TIMEOUT: ".prompt",
@@ -289,7 +325,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     whotheyare: {
       entry: send((context) => ({
         type: "SPEAK",
-        value: "${}",
+        value: "${context.person}",
         })),
       on: { ENDSPEECH: "wannameetthem" },
     },
