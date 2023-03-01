@@ -194,38 +194,6 @@ const grammar: Grammar = {
     intent: "None",
     entities: { title: "meeting with somebody"},
   },
-  "Barbra Streisand": {
-    intent: "None",
-    entities: { person: "Barbra Streisand - a singer"},
-  },
-  "Whitney Houston": {
-    intent: "None",
-    entities: { person: "Whitney Houston - a singer"},
-  },
-  "Celine Dion": {
-    intent: "None" ,
-    entities: { person: "Celine Dion - a singer"},
-  },
-  "Jack Black": {
-    intent: "None",
-    entities: { person: "Jack Black - an actor"},
-  },
-  "Scarlett Johansson": {
-    intent: "None",
-    entities: { person: "Scarlett Johansson - an actress"},
-  },
-  "John Travolta": {
-    intent: "None",
-    entities: { person: "John Travolta - an actor"},
-  },
-  "Milan": {
-    intent: "None",
-    entities: { person: "Milan - a student"}, 
-  },
-  "Vlad": {
-    intent: "None",
-    entities: { person: "Vlad - a lecturer"},
-  },
 };
 
 const getEntity = (context: SDSContext, entity: string) => {
@@ -297,9 +265,10 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "whotheyare",
-            cond: (context) => !!getEntity(context, "person"),
+            let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+            cond: (u) => u.includes("who is"),
             actions: assign({
-              person: (context) => getEntity(context, "person"),
+              person: (u) => u.replace("who is", ""),
             }),
             },
           {
@@ -320,6 +289,36 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
           entry: say("Sorry, I don't know them. Please try again."),
           on: { ENDSPEECH: "ask" },
         },
+      },
+    },
+    whotheyare: {
+      initial: "idle",
+      states: {
+        idle: {
+          on: {FETCH: target: "loading"},
+        },
+        loading: {
+          invoke: {
+            id: 'a',
+            src: (context, event) => kbRequest(context.person),
+          onDone: {
+              target: 'success',
+              actions: assign({
+                personinfo: (context, event) => event.data,
+              }),
+            },
+            onError: {
+              target: 'failure',
+            },
+          },
+        },
+        success: {
+          
+        },
+        failure: {
+          entry: say("Sorry, I can't find anything about them."),
+          on: { ENDSPEECH: {target: "whois"}}
+        }
       },
     },
     whotheyare: {
