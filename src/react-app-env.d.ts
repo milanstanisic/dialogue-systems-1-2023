@@ -43,6 +43,7 @@ interface SDSContext {
   want_person: any;
   want_meeting: any;
   person: any;
+  personinfo: any;
 }
 
 type SDSEvent =
