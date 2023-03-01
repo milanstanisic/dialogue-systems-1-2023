@@ -313,7 +313,8 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
           },
         },
         success: {
-          
+          entry: say("${context.personinfo}"),
+          on: {ENDSPEECH: "wannameetthem"},
         },
         failure: {
           entry: say("Sorry, I can't find anything about them."),
