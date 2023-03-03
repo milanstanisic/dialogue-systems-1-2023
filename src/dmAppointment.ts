@@ -16,15 +16,15 @@ interface Grammar {
 const grammar: Grammar = {
   lecture: {
     intent: "None",
-    entities: { title: "dalogue systems lecture" },
+    entities: { title: "dialogue systems lecture" },
   },
   lunch: {
     intent: "None",
-    entities: { title: "lnch at the canteen" },
+    entities: { title: "lunch at the canteen" },
   },
   doctor: {
     intent: "None",
-    entities: { title: "dctor's appointment" },
+    entities: { title: "doctor's appointment" },
   },
   sport: {
     intent: "None",
@@ -82,15 +82,15 @@ const grammar: Grammar = {
     intent: "None",
     entities: { day: "Thursday" },
   },
-  "at ten": {
+  "at 10": {
     intent: "None",
     entities: { time: "10:00" },
   },
-  "at eleven": {
+  "at 11": {
     intent: "None",
     entities: { time: "11:00" },
   },
-  "at twelve": {
+  "at 12": {
     intent: "None",
     entities: { time: "12:00" },
   },
@@ -102,39 +102,39 @@ const grammar: Grammar = {
     intent: "None",
     entities: { time: "00:00" },
   },
-  "at one": {
+  "at 1": {
     intent: "None",
     entities: { time: "01:00" },
   },
-  "at two": {
+  "at 2": {
     intent: "None",
     entities: { time: "02:00" },
   },
-  "at three": {
+  "at 3": {
     intent: "None",
     entities: { time: "03:00" },
   },
-  "at four": {
+  "at 4": {
     intent: "None",
     entities: { time: "04:00" },
   },
-  "at five": {
+  "at 5": {
     intent: "None",
     entities: { time: "05:00" },
   },
-  "at six": {
+  "at 6": {
     intent: "None",
     entities: { time: "06:00" },
   },
-  "at seven": {
+  "at 7": {
     intent: "None",
     entities: { time: "07:00" },
   },
-  "at eight": {
+  "at 8": {
     intent: "None",
     entities: { time: "08:00" },
   },
-  "at nine": {
+  "at 9": {
     intent: "None",
     entities: { time: "09:00" },
   },
@@ -170,19 +170,19 @@ const grammar: Grammar = {
     intent: "None",
     entities: { affirm: "not" },
   },
-  "schedule a meeting": {
+  "schedule something": {
     intent: "None",
-    entities: { want_meeting: "meeting"},
+    entities: { want_meeting: "something"},
   },
   "create a meeting": {
     intent: "None",
-    entities: { want_meeting: "a meeting"},
+    entities: { want_meeting: "meeting"},
   },
   "make an appointment": {
     intent: "None",
     entities: { want_meeting: "appointment"},
   },
-  "get to know someone": {
+  "find out who somebody is": {
     intent: "None",
     entities: { want_person: "get to know"},
   },
@@ -206,6 +206,17 @@ const getEntity = (context: SDSContext, entity: string) => {
   }
   return false;
 };
+
+const isWho = (context: SDSContext) => {
+  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+  return u.includes("who is");
+};
+
+const getName = (context: SDSContext) => {
+  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+  return u.replace("who is", "");
+};
+
 
 export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
   initial: "idle",
@@ -247,14 +258,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Hello! Do you want to find out who somebody is or do you want to schedule something?"),
+          entry: say(`Hello! Do you want to find out who somebody is or do you want to schedule something?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I don't think I'm able to do that. Please try again."),
+          entry: say(`Sorry, I don't think I'm able to do that. Please try again.`),
           on: { ENDSPEECH: "ask" },
         },
       },
@@ -265,10 +276,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "whotheyare",
-            let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
-            cond: (u) => u.includes("who is"),
+            cond: (context) => isWho(context),
             actions: assign({
-              person: (u) => u.replace("who is", ""),
+              person: (context) => getName(context),
             }),
             },
           {
@@ -279,33 +289,30 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Who do you want to find out about?"),
+          entry: say(`Who do you want to find out about?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I don't know them. Please try again."),
+          entry: say(`Sorry, I don't know them. Please try again.`),
           on: { ENDSPEECH: "ask" },
         },
       },
     },
     whotheyare: {
-      initial: "idle",
+      initial: "loading",
       states: {
-        idle: {
-          on: {FETCH: target: "loading"},
-        },
         loading: {
           invoke: {
-            id: 'a',
+            id: 'Abstract',
             src: (context, event) => kbRequest(context.person),
           onDone: {
               target: 'success',
               actions: assign({
-                personinfo: (context, event) => event.data,
-              }),
+                personinfo: (context, event) => {return event.data.Abstract;},
+              }), 
             },
             onError: {
               target: 'failure',
@@ -313,21 +320,18 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
           },
         },
         success: {
-          entry: say("${context.personinfo}"),
-          on: {ENDSPEECH: "wannameetthem"},
+          entry: send((context) => ({
+            type: "SPEAK",
+            value: `Here is what I know about ${context.person}: ${context.personinfo}`,
+            })),
+          type: 'final',
         },
         failure: {
-          entry: say("Sorry, I can't find anything about them."),
-          on: { ENDSPEECH: {target: "whois"}}
-        }
+          entry: say(`Sorry, I can't find anything about them. I'll try searching some resources again.`),
+	    on: {ENDSPEECH: "loading"}
+        },
       },
-    },
-    whotheyare: {
-      entry: send((context) => ({
-        type: "SPEAK",
-        value: "${context.person}",
-        })),
-      on: { ENDSPEECH: "wannameetthem" },
+      onDone: "wannameetthem",
     },
     wannameetthem: {
       initial: "prompt",
@@ -355,14 +359,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Would you want to set up a meeting with them?"),
+          entry: say(`Do you want to set up a meeting with them?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get that. Please try again."),
+          entry: say(`Sorry, I didn't get that. Please try again.`),
           on: { ENDSPEECH: "ask" },
         },
       },
@@ -386,14 +390,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("What do you want to schedule?"),
+          entry: say(`What do you want to schedule?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -401,7 +405,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     info: {
       entry: send((context) => ({
         type: "SPEAK", 
-        value: "Ok, let's schedule ${}!", })),
+        value: `Ok, let's schedule ${context.title}!`, })),
       on: { ENDSPEECH: "day_of_the_week" },
     },
     day_of_the_week: {
@@ -423,14 +427,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("What day of the week do you want the meeting on?"),
+          entry: say(`What day of the week do you want the meeting on?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -461,14 +465,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Do you want your meeting to be scheduled for the whole day?"),
+          entry: say(`Do you want your meeting to be scheduled for the whole day?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -492,14 +496,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("What time shall the meeting be?"),
+          entry: say(`What time shall the meeting be?`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -530,14 +534,17 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Okay, I scheduled a(n) ${context.title} on ${context.day}. Is that correct? If not, we will try scheduling your meeting once again."),
+          entry: send((context) => ({
+            type: "SPEAK",
+            value: `Okay, I scheduled ${context.title} on ${context.day}. Is that correct? If not, we will try scheduling your meeting once again.`,
+            })),
           on: { ENDSPEECH: "ask" },
         },
        ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -568,14 +575,17 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say("Okay, I scheduled a(n) ${context.title} on ${context.day} at ${context.time}. Is that correct? If not, we will try scheduling your meeting once again."),
+          entry: send((context) => ({
+            type: "SPEAK",
+            value: `Okay, I scheduled a(n) ${context.title} on ${context.day} at ${context.time}. Is that correct? If not, we will try scheduling your meeting once again.`,
+            })),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say("Sorry, I didn't get what you mean. Please try again."),
+          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -583,13 +593,13 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
     endline: {
       entry: send((context) => ({
         type: "SPEAK",
-        value: "Your meeting has been created!",
+        value: `Your meeting has been created!`,
         })),
     },
     endline2: {
       entry: send((context) => ({
         type: "SPEAK",
-        value: "Goodbye then!",
+        value: `Goodbye then!`,
         })),
     },
   },
