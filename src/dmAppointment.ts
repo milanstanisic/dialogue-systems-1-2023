@@ -14,186 +14,41 @@ interface Grammar {
 }
 
 const grammar: Grammar = {
-  lecture: {
-    intent: "None",
-    entities: { title: "dialogue systems lecture" },
-  },
-  lunch: {
-    intent: "None",
-    entities: { title: "lunch at the canteen" },
-  },
-  doctor: {
-    intent: "None",
-    entities: { title: "doctor's appointment" },
-  },
-  sport: {
-    intent: "None",
-    entities: { title: "sport time" },
-  },
-  dinner: {
-    intent: "None",
-    entities: { title: "dinner out"},
-  },
-  exam: {
-    intent: "None",
-    entities: { title: "Exam" },
-  },
-  workout: {
-    intent: "None",
-    entities: { title: "Workout at the gym" },
-  },
-  date: {
-    intent: "None",
-    entities: { title: "Date" },
-  },
-  flight: {
-    intent: "None",
-    entities: { title: "Plane flight" },
-  },
-  dentist: {
-    intent: "None",
-    entities: { title: "Dentist appointment" },
-  },
-  "on friday": {
-    intent: "None",
-    entities: { day: "Friday" },
-  },
-  "on saturday": {
-    intent: "None",
-    entities: { day: "Saturday" },
-  },
-  "on sunday": {
-    intent: "None",
-    entities: { day: "Sunday" },
-  },
-  "on monday": {
-    intent: "None",
-    entities: { day: "Monday" },
-  },
-  "on tuesday": {
-    intent: "None",
-    entities: { day: "Tuesday" },
-  },
-  "on wednesday": {
-    intent: "None",
-    entities: { day: "Wednesday" },
-  },
-  "on thursday": {
-    intent: "None",
-    entities: { day: "Thursday" },
-  },
-  "at 10": {
-    intent: "None",
-    entities: { time: "10:00" },
-  },
-  "at 11": {
-    intent: "None",
-    entities: { time: "11:00" },
-  },
-  "at 12": {
-    intent: "None",
-    entities: { time: "12:00" },
-  },
-  "at noon": {
-    intent: "None",
-    entities: { time: "12:00" },
-  },
-  "at midnight": {
-    intent: "None",
-    entities: { time: "00:00" },
-  },
-  "at 1": {
-    intent: "None",
-    entities: { time: "01:00" },
-  },
-  "at 2": {
-    intent: "None",
-    entities: { time: "02:00" },
-  },
-  "at 3": {
-    intent: "None",
-    entities: { time: "03:00" },
-  },
-  "at 4": {
-    intent: "None",
-    entities: { time: "04:00" },
-  },
-  "at 5": {
-    intent: "None",
-    entities: { time: "05:00" },
-  },
-  "at 6": {
-    intent: "None",
-    entities: { time: "06:00" },
-  },
-  "at 7": {
-    intent: "None",
-    entities: { time: "07:00" },
-  },
-  "at 8": {
-    intent: "None",
-    entities: { time: "08:00" },
-  },
-  "at 9": {
-    intent: "None",
-    entities: { time: "09:00" },
-  },
-  yes: {
-    intent: "None",
-    entities: { affirm: "yes" },
-  },
-  yeah: {
-    intent: "None",
-    entities: { affirm: "yeah" },
-  },
-  sure: {
-    intent: "None",
-    entities: { affirm: "sure" },
-  },
-  correct: {
-    intent: "None",
-    entities: { affirm: "correct" },
-  },
-  no: {
-    intent: "None",
-    entities: { reject: "no" },
-  },
-  incorrect: {
-    intent: "None",
-    entities: { reject: "incorrect" },
-  },
-  absolutely: {
-    intent: "None",
-    entities: { affirm: "absolutely" },
-  },
-  not: {
-    intent: "None",
-    entities: { affirm: "not" },
-  },
-  "schedule something": {
-    intent: "None",
-    entities: { want_meeting: "something"},
-  },
-  "create a meeting": {
-    intent: "None",
-    entities: { want_meeting: "meeting"},
-  },
-  "make an appointment": {
-    intent: "None",
-    entities: { want_meeting: "appointment"},
-  },
-  "find out who somebody is": {
-    intent: "None",
-    entities: { want_person: "get to know"},
-  },
-  "who": {
-    intent: "None",
-    entities: { want_person: "who is x"},
-  },
-  "meeting with a person": {
-    intent: "None",
-    entities: { title: "meeting with somebody"},
-  },
+};
+
+const getNLUResult = (context: SDSContext) => {
+  let nlu_result = context.nluResult.prediction.topIntent;
+  return nlu_result;
+};
+
+const formatTime = (context: SDSContext) => {
+  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+  //matching a regular expression and returning the time.
+  regex_match = u.match(/ ([0-9]|1[0-2]) *(o'clock){0, 1}/);
+  if (regex_match) {
+    return regex_match[1];
+  };
+  return "some time";
+};
+
+const formatDay = (context: SDSContext) => {
+  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+  //matching a regular expression and returning the name of the day.
+  regex_match = u.match(/ [a-z]*day/);
+  if (regex_match) {
+    return regex_match[1];
+  };
+  return "day";
+};
+
+const formatTitle = (context: SDSContext) => {
+  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
+  //matching a regular expression and returning the name of the meeting's name.
+  regex_match = u.match(/ an{0, 1} .*/);
+  if (regex_match) {
+    return regex_match[1];
+  };
+  return "something";
 };
 
 const getEntity = (context: SDSContext, entity: string) => {
@@ -238,17 +93,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "whois",
-            cond: (context) => !!getEntity(context, "want_person"),
-            actions: assign({
-              want_person: (context) => getEntity(context, "want_person"),
-            }),
+            cond: (context) => getNLUResult(context) === "want_person",
           },
           {
             target: "welcome",
-            cond: (context) => !!getEntity(context, "want_meeting"),
-            actions: assign({
-              want_meeting: (context) => getEntity(context, "want_meeting"),
-            }),
+            cond: (context) => getNLUResult(context) === "want_meeting",
           },
           {
             target: ".nomatch",
@@ -339,17 +188,14 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "day_of_the_week",
-            cond: (context) => !!getEntity(context, "affirm"),
+            cond: (context) => getNLUResult(context) === 'affirm',
             actions: assign({
-              affirm: (context) => getEntity(context, "affirm"),
+              title: (context) => formatTitle(`a meeting with ${context.person}`),
             }),
           },
           {
             target: "endline2",
-            cond: (context) => !!getEntity(context, "reject"),
-            actions: assign({
-              reject: (context) => getEntity(context, "reject"),
-            }),
+            cond: (context) => getNLUResult(context) === 'reject',
           },
           {
             target: ".nomatch",
@@ -377,13 +223,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "info",
-            cond: (context) => !!getEntity(context, "title"),
             actions: assign({
-              title: (context) => getEntity(context, "title"),
+              title: (context) => formatTitle(context),
             }),
-          },
-          {
-            target: ".nomatch",
           },
         ],
         TIMEOUT: ".prompt",
@@ -396,10 +238,6 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         ask: {
           entry: send("LISTEN"),
         },
-        nomatch: {
-          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
-          on: { ENDSPEECH: "ask" },
-        }
       },
     },
     info: {
@@ -414,9 +252,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "duration",
-            cond: (context) => !!getEntity(context, "day"),
+            cond: (context) => getNLUResult(context) === "day",
             actions: assign({
-              day: (context) => getEntity(context, "day"),
+              day: (context) => formatDay(context),
             }),
           },
           {
@@ -434,7 +272,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
           entry: send("LISTEN"),
         },
         nomatch: {
-          entry: say(`Sorry, I didn't get what you mean. Please try again.`),
+          entry: say(`Sorry, I didn't get what you mean. On what day?`),
           on: { ENDSPEECH: "ask" },
         }
       },
@@ -445,17 +283,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "confirmation_whole_day",
-            cond: (context) => !!getEntity(context, "affirm"),
-            actions: assign({
-              affirm: (context) => getEntity(context, "affirm"),
-            }),
+            cond: (context) => getNLUResult(context) === "affirm",
           },
           {
             target: "meeting_time",
-            cond: (context) => !!getEntity(context, "reject"),
-            actions: assign({
-              reject: (context) => getEntity(context, "reject"),
-            }),
+            cond: (context) => getNLUResult(context) === "reject",
           },
           {
             target: ".nomatch",
@@ -483,9 +315,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "confirmation_time",
-            cond: (context) => !!getEntity(context, "time"),
+            cond: (context) => getNLUResult(context) === "time",
             actions: assign({
-              time: (context) => getEntity(context, "time"),
+              time: (context) => formatTime(context),
             }),
           },
           {
@@ -514,17 +346,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "endline",
-            cond: (context) => !!getEntity(context, "affirm"),
-            actions: assign({
-               affirm: (context) => getEntity(context, "affirm"),
-            }),
+            cond: (context) => getNLUResult(context) === "affirm",
           },
           {
             target: "welcome",
-            cond: (context) => !!getEntity(context, "reject"),
-            actions: assign({
-              reject: (context) => getEntity(context, "reject"),
-            }),
+            cond: (context) => getNLUResult(context) === "reject",
           },
           {
             target: ".nomatch",
@@ -555,17 +381,11 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "endline",
-            cond: (context) => !!getEntity(context, "affirm"),
-            actions: assign({
-              affirm: (context) => getEntity(context, "affirm"),
-            }),
+            cond: (context) => getNLUResult(context) === "affirm",
           },
           {
             target: "welcome",
-            cond: (context) => !!getEntity(context, "reject"),
-            actions: assign({
-              reject: (context) => getEntity(context, "reject"),
-            }),
+            cond: (context) => getNLUResult(context) === "reject",
           },
           {
             target: ".nomatch",
