@@ -34,6 +34,7 @@ interface SDSContext {
   ttsAgenda: string;
   azureAuthorizationToken: string;
   audioCtx: any;
+  nluResult: any;
   title: any;
   topic: string;
   time: any;
