@@ -24,9 +24,9 @@ const getNLUResult = (context: SDSContext) => {
 const formatTime = (context: SDSContext) => {
   let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
   //matching a regular expression and returning the time.
-  regex_match = u.match(/ ([0-9]|1[0-2]) *(o'clock){0, 1}/);
+  regex_match = u.match(/(at|around){0, 1} .*( o'clock){0, 1}/);
   if (regex_match) {
-    return regex_match[1];
+    return regex_match[0];
   };
   return "some time";
 };
@@ -34,9 +34,9 @@ const formatTime = (context: SDSContext) => {
 const formatDay = (context: SDSContext) => {
   let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
   //matching a regular expression and returning the name of the day.
-  regex_match = u.match(/ [a-z]*day/);
+  regex_match = u.match(/[a-z]*day/);
   if (regex_match) {
-    return regex_match[1];
+    return regex_match[0];
   };
   return "day";
 };
@@ -44,11 +44,11 @@ const formatDay = (context: SDSContext) => {
 const formatTitle = (context: SDSContext) => {
   let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
   //matching a regular expression and returning the name of the meeting's name.
-  regex_match = u.match(/ an{0, 1} .*/);
+  regex_match = u.match(/.*/);
   if (regex_match) {
-    return regex_match[1];
+    return regex_match[0];
   };
-  return "something";
+  return "this";
 };
 
 const getEntity = (context: SDSContext, entity: string) => {
@@ -232,7 +232,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
       },
       states: {
         prompt: {
-          entry: say(`What do you want to schedule?`),
+          entry: say(`Please tell me how I shall call this thing.`),
           on: { ENDSPEECH: "ask" },
         },
         ask: {
@@ -397,7 +397,7 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         prompt: {
           entry: send((context) => ({
             type: "SPEAK",
-            value: `Okay, I scheduled a(n) ${context.title} on ${context.day} at ${context.time}. Is that correct? If not, we will try scheduling your meeting once again.`,
+            value: `Okay, I scheduled ${context.title} on ${context.day} at ${context.time}. Is that correct? If not, we will try scheduling your meeting once again.`,
             })),
           on: { ENDSPEECH: "ask" },
         },
