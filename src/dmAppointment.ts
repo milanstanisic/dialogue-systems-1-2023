@@ -28,17 +28,7 @@ const formatTime = (context: SDSContext) => {
   if (regex_match) {
     return regex_match[0];
   };
-  return "some time";
-};
-
-const formatDay = (context: SDSContext) => {
-  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
-  //matching a regular expression and returning the name of the day.
-  regex_match = u.match(/[a-z]*day/);
-  if (regex_match) {
-    return regex_match[0];
-  };
-  return "day";
+  return "that time";
 };
 
 const formatTitle = (context: SDSContext) => {
@@ -51,15 +41,13 @@ const formatTitle = (context: SDSContext) => {
   return "this";
 };
 
-const getEntity = (context: SDSContext, entity: string) => {
+const getDay = (context: SDSContext, entity: string) => {
   // lowercase the utterance and remove tailing "."
-  let u = context.recResult[0].utterance.toLowerCase().replace(/\.$/g, "");
-  if (u in grammar) {
-    if (entity in grammar[u].entities) {
-      return grammar[u].entities[entity];
+  let u = context.nluResult.prediction.entities;
+    if (u.length > 0) {
+      return u[0];
     }
-  }
-  return false;
+  return "that day";
 };
 
 const isWho = (context: SDSContext) => {
@@ -252,9 +240,9 @@ export const dmMachine: MachineConfig<SDSContext, any, SDSEvent> = {
         RECOGNISED: [
           {
             target: "duration",
-            cond: (context) => getNLUResult(context) === "day",
+            cond: (context) => getDay(context).category === "day",
             actions: assign({
-              day: (context) => formatDay(context),
+              day: (context) => getDay(context).text,
             }),
           },
           {
